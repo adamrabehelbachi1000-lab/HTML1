@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Información de Red y Geolocalización</title>
+
+<style>
+    body{
+        font-family: Arial, sans-serif;
+        background:#111;
+        color:white;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+        margin:0;
+    }
+
+    .box{
+        background:#1e1e1e;
+        padding:30px;
+        border-radius:15px;
+        width:500px;
+        box-shadow:0 0 20px rgba(0,0,0,0.5);
+    }
+
+    h1{
+        text-align:center;
+        color:#00ff88;
+    }
+
+    .dato{
+        margin-top:15px;
+        padding:10px;
+        background:#2b2b2b;
+        border-radius:8px;
+    }
+
+    .loading{
+        color:orange;
+    }
+
+    .error{
+        color:red;
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h1>Información Detectada</h1>
+
+    <div class="dato">
+        <strong>IP Pública:</strong>
+        <span id="ip" class="loading">Obteniendo...</span>
+    </div>
+
+    <div class="dato">
+        <strong>Latitud:</strong>
+        <span id="lat" class="loading">Esperando permisos...</span>
+    </div>
+
+    <div class="dato">
+        <strong>Longitud:</strong>
+        <span id="lon" class="loading">Esperando permisos...</span>
+    </div>
+
+    <div class="dato">
+        <strong>Precisión:</strong>
+        <span id="accuracy" class="loading">Esperando permisos...</span>
+    </div>
+
+    <div class="dato">
+        <strong>Google Maps:</strong><br>
+        <a id="maps" href="#" target="_blank" style="color:#00ff88;">
+            Esperando ubicación...
+        </a>
+    </div>
+</div>
+
+<script>
+
+// ======================
+// OBTENER IP PÚBLICA
+// ======================
+
+fetch('https://api.ipify.org?format=json')
+.then(response => response.json())
+.then(data => {
+    document.getElementById('ip').textContent = data.ip;
+})
+.catch(() => {
+    document.getElementById('ip').textContent = "No disponible";
+    document.getElementById('ip').className = "error";
+});
+
+
+// ======================
+// OBTENER GEOLOCALIZACIÓN
+// ======================
+
+function obtenerUbicacion() {
+
+    if (!navigator.geolocation) {
+        alert("Tu navegador no soporta geolocalización");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            document.getElementById('lat').textContent = lat;
+            document.getElementById('lon').textContent = lon;
+            document.getElementById('accuracy').textContent = accuracy + " metros";
+
+            const mapsURL = `https://www.google.com/maps?q=${lat},${lon}`;
+
+            const maps = document.getElementById('maps');
+            maps.href = mapsURL;
+            maps.textContent = mapsURL;
+        },
+
+        (error) => {
+
+            let mensaje = "";
+
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensaje = "Permiso denegado";
+                    break;
+
+                case error.POSITION_UNAVAILABLE:
+                    mensaje = "Ubicación no disponible";
+                    break;
+
+                case error.TIMEOUT:
+                    mensaje = "Tiempo agotado";
+                    break;
+
+                default:
+                    mensaje = "Error desconocido";
+            }
+
+            document.getElementById('lat').textContent = mensaje;
+            document.getElementById('lon').textContent = mensaje;
+            document.getElementById('accuracy').textContent = mensaje;
+
+            document.getElementById('lat').className = "error";
+            document.getElementById('lon').className = "error";
+            document.getElementById('accuracy').className = "error";
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+
+// Lanza la petición automáticamente
+obtenerUbicacion();
+
+</script>
+
+</body>
+</html>
